@@ -13,3 +13,5 @@ DB_NAME = os.environ["DB_NAME"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 
 DVLA_API_KEY = os.environ["DVLA_API_KEY"]
+
+TMDB_ACCESS_TOKEN = os.environ["TMDB_ACCESS_TOKEN"]

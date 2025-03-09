@@ -28,7 +28,8 @@ def verify_password(email, password):
                 'SECRET_HASH': secret_hash
             },
         )
-        return True
+        logged_in_user = user.User.from_email(email)
+        return logged_in_user
     except ClientError:
         return False
 
@@ -40,7 +41,7 @@ def verify_token(token):
                    f'{settings.COGNITO_USER_POOL_ID}/.well-known/jwks.json'
         jwk_client = PyJWKClient(jwks_url)
         signing_key = jwk_client.get_signing_key_from_jwt(token)
-        jwt.decode(
+        decoded_token= jwt.decode(
             token,
             signing_key.key,
             algorithms=["RS256"],
@@ -48,7 +49,9 @@ def verify_token(token):
             issuer=f'https://cognito-idp.{settings.COGNITO_REGION}.amazonaws.com/{settings.COGNITO_USER_POOL_ID}',
             options={"verify_aud": False}
         )
-        return True
+        user_cognito_id = decoded_token.get("sub")
+        logged_in_user = user.User.from_cognito_id(user_cognito_id)
+        return logged_in_user
     except PyJWTError:
         return False
 

@@ -92,6 +92,32 @@ class User:
 
         return instance
 
+    @classmethod
+    def from_cognito_id(cls, cognito_id: str) -> "User":
+        with database.cursor_scope() as cursor:
+            cursor.execute(
+                (
+                    "select * from users "
+                    "WHERE  cognito_id = %(cognito_id)s; "
+                ),
+                ({"cognito_id": cognito_id})
+            )
+
+            answer = cursor.fetchone()
+
+        if answer is None:
+            raise Exception(f"No user found in database with cognito id of {cognito_id}. ")
+        else:
+            instance = cls(
+                user_id=answer.user_id,
+                cognito_id=answer.cognito_id,
+                email=answer.email,
+                email_verified=answer.email_verified
+            )
+
+        return instance
+
+
     @staticmethod
     def delete(user_id: str):
         with database.cursor_scope() as cursor:

@@ -41,7 +41,7 @@ def verify_token(token):
                    f'{settings.COGNITO_USER_POOL_ID}/.well-known/jwks.json'
         jwk_client = PyJWKClient(jwks_url)
         signing_key = jwk_client.get_signing_key_from_jwt(token)
-        decoded_token= jwt.decode(
+        decoded_token = jwt.decode(
             token,
             signing_key.key,
             algorithms=["RS256"],
@@ -62,7 +62,7 @@ def register():
     email = data.get('email')
     password = data.get('password')
     if not email or not password:
-        return jsonify({'error': 'Email and password are required.'}), 400
+        return jsonify({'error_message': 'Email and password are required.'}), 400
     secret_hash = cognito.get_secret_hash(email)
     try:
         new_user = cognito.cognito_client.sign_up(
@@ -72,12 +72,12 @@ def register():
             SecretHash=secret_hash,
         )
     except ClientError as e:
-        return jsonify({'message': f"Cannot register user with {email}. Reason: {str(e.args)}"}), 500
+        return jsonify({'error_message': f"Cannot register user with {email}. Reason: {str(e.args)}"}), 500
     else:
         try:
             user.User.create(cognito_id=new_user["UserSub"], email=email)
         except user.CannotCreateNewUserError as e:
-            return jsonify({'message': f"Cannot register user with {email}. Reason: {str(e.args)}"}), 500
+            return jsonify({'error_message': f"Cannot register user with {email}. Reason: {str(e.args)}"}), 500
 
     return jsonify({'message': f"User with {email} has been created"}), 201
 
@@ -88,7 +88,7 @@ def confirm_account():
     confirmation_code = data.get('code')
     email = data.get('email')
     if not email or not confirmation_code:
-        return jsonify({'error': 'Email and confirmation_code are required.'}), 400
+        return jsonify({'error_message': 'Email and confirmation_code are required.'}), 400
 
     verify_user = user.User.from_email(email=email)
 
@@ -101,12 +101,12 @@ def confirm_account():
             ConfirmationCode=confirmation_code
         )
     except ClientError as e:
-        return jsonify({'message': f"Cannot confirm account with {email}. Reason: {str(e.args)}"}), 500
+        return jsonify({'error_message': f"Cannot confirm account with {email}. Reason: {str(e.args)}"}), 500
     else:
         try:
             verify_user.verify_email(verify_user.user_id)
         except user.CannotVerifyEmailError as e:
-            return jsonify({'message': f"Cannot confirm account with {email}. Reason: {str(e.args)}"}), 500
+            return jsonify({'error_message': f"Cannot confirm account with {email}. Reason: {str(e.args)}"}), 500
 
         return jsonify({'message': f"Account {email} has been confirmed."}), 201
 
@@ -123,7 +123,7 @@ def resend_confirmation_code():
             Username=email
         )
     except ClientError as e:
-        return jsonify({'message': f"Failed resend confirmation code for {email}. Reason: {str(e.args)}"}), 500
+        return jsonify({'error_message': f"Failed resend confirmation code for {email}. Reason: {str(e.args)}"}), 500
     else:
         return jsonify({'message': f"confirmation code has been sent to {email}. "}), 201
 
@@ -138,7 +138,7 @@ def login():
     try:
         current_user = user.User.from_email(email)
     except Exception as e:
-        return jsonify({'error': f'{e}.'}), 400
+        return jsonify({'error_message': f'{e}.'}), 400
     else:
         try:
             secret_hash = cognito.get_secret_hash(email)
@@ -155,11 +155,11 @@ def login():
         except ClientError as e:
             if e.response['Error']['Code'] == 'UserNotConfirmedException':
                 return jsonify({
-                    'åmessage': 'Account not verified.',
+                    'error_message': 'Account not verified.',
                     'email_verified': current_user.email_verified
                 }), 401
             else:
-                return jsonify({'message': f"Could not verify credentials. {e}"}), 401
+                return jsonify({'error_message': f"Could not verify credentials. {e}"}), 401
         else:
             result = auth_result["AuthenticationResult"]
             return jsonify({
@@ -187,7 +187,7 @@ def refresh_access_token():
             AuthParameters={"REFRESH_TOKEN": refresh_token, "SECRET_HASH": secret_hash},
         )
     except ClientError as e:
-        return jsonify({'message': f"Cannot refresh access token. Reason: {str(e.args)}"}), 500
+        return jsonify({'error_message': f"Cannot refresh access token. Reason: {str(e.args)}"}), 500
     else:
         access_token = response["AuthenticationResult"]["AccessToken"]
         id_token = response["AuthenticationResult"]["IdToken"]
@@ -217,7 +217,7 @@ def forgot_password_code():
             Username=email
         )
     except ClientError as e:
-        return jsonify({'message': f"Cannot create a change password code. Reason: {str(e.args)}"}), 500
+        return jsonify({'error_message': f"Cannot create a change password code. Reason: {str(e.args)}"}), 500
     return jsonify({'message': f'Change password code has been sent to {email}'})
 
 
@@ -250,4 +250,4 @@ def forgot_password():
     else:
         message = f'Password has been changed for {email}'
         status_code = 201
-    return jsonify({'message': message}), status_code
+    return jsonify({'error_message': message}), status_code

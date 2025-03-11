@@ -19,7 +19,7 @@ class TMDBClient:
             return response
         else:
             raise TMDBAPIError(
-                f"Unexpected response ({response.status_code=}) from TMDB API: {url=}: {response.text}."
+                f"Unexpected response {response.text}."
             )
 
 
@@ -56,3 +56,11 @@ class TMDBMovieDiscovery(TMDBEndpoint):
 
     def get_url(self) -> str:
         return f"{TMDB_BASE_URL}discover/movie?include_adult={self.include_adult}&page={self.page}"
+
+
+class TMDBMovieById(TMDBEndpoint):
+    def __init__(self, movie_id: int):
+        self.movie_id = movie_id
+
+    def get_url(self) -> str:
+        return f"{TMDB_BASE_URL}movie/{self.movie_id}"

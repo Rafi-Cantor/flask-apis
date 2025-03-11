@@ -117,7 +117,6 @@ class User:
 
         return instance
 
-
     @staticmethod
     def delete(user_id: str):
         with database.cursor_scope() as cursor:

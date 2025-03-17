@@ -1,4 +1,5 @@
 from utils import database
+import psycopg2
 
 
 class UserMovies:
@@ -11,17 +12,20 @@ class UserMovies:
 
     @classmethod
     def create_in_database(cls, movie_id: int, user_id: int, title: str, poster_path: str):
-        with database.cursor_scope() as cursor:
-            cursor.execute(
-                (
-                    "INSERT INTO user_movies "
-                    "(movie_id, user_id, title, poster_path) "
-                    "VALUES (%(movie_id)s, %(user_id)s, %(title)s, %(poster_path)s); "
-                ),
-                (
-                    {"movie_id": movie_id, "title": title, "user_id": user_id, "poster_path": poster_path}
-                )
-                )
+        try:
+            with database.cursor_scope() as cursor:
+                cursor.execute(
+                    (
+                        "INSERT INTO user_movies "
+                        "(movie_id, user_id, title, poster_path) "
+                        "VALUES (%(movie_id)s, %(user_id)s, %(title)s, %(poster_path)s); "
+                    ),
+                    (
+                        {"movie_id": movie_id, "title": title, "user_id": user_id, "poster_path": poster_path}
+                    )
+                    )
+        except psycopg2.DatabaseError:
+            raise
 
     @classmethod
     def from_user_id(cls, user_id: int):
@@ -67,12 +71,12 @@ class UserMovies:
             )
 
     @staticmethod
-    def delete_from_database(movie_id: int, user_id: int):
+    def delete_from_database(record_id: int):
         with database.cursor_scope() as cursor:
             cursor.execute(
                 (
                     "DELETE FROM user_movies "
-                    "WHERE movie_id = %(movie_id)s AND user_id = %(user_id)s;"
+                    "WHERE record_id = %(record_id)s;"
                 ),
-                ({"movie_id": movie_id, "user_id": user_id})
+                ({"record_id": record_id})
             )

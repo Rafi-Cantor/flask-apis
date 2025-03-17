@@ -3,6 +3,7 @@ from flask import request, jsonify
 from app.movie_app import movie_app
 from objects import user_movies
 from integrations import the_movie_db
+import psycopg2
 
 
 @movie_app.route("/movies_by_page_number/<page_number>", methods=["GET"])
@@ -79,12 +80,15 @@ def add_movie_to_favourites():
     response_json = response.json()
     poster_path = response_json["poster_path"]
     title = response_json["title"]
-    user_movies.UserMovies.create_in_database(
-            movie_id=movie_id,
-            user_id=u.user_id,
-            title=title,
-            poster_path=poster_path
-        )
+    try:
+        user_movies.UserMovies.create_in_database(
+                movie_id=movie_id,
+                user_id=u.user_id,
+                title=title,
+                poster_path=poster_path
+            )
+    except psycopg2.DatabaseError:
+        return jsonify({"error_message": f"{title} already exists in favourites"}), 400
 
     return jsonify({"message": f"Successfully added {title} to favourites"}), 201
 
@@ -98,5 +102,5 @@ def delete_movie_from_favourites():
         return jsonify({'error_message': 'movie_id is required. '}), 400
     u = multi_auth.current_user()
     deleted_movie = user_movies.UserMovies.from_user_id_and_movie_id(movie_id=movie_id, user_id=u.user_id)
-    user_movies.UserMovies.delete_from_database(movie_id=movie_id, user_id=u.user_id)
-    return jsonify({"message": f"Successfully deleted {deleted_movie.title} to favourites"}), 201
+    user_movies.UserMovies.delete_from_database(record_id=deleted_movie.record_id)
+    return jsonify({"message": f"Successfully deleted {deleted_movie.title} from favourites"}), 201

@@ -49,7 +49,7 @@ class User:
             cursor.execute(
                 (
                     "select * from users "
-                    "WHERE  email = %(email)s; "
+                    "where email = %(email)s;"
                 ),
                 ({"email": email})
             )

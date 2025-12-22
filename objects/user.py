@@ -25,6 +25,9 @@ class User:
         self.email = email
         self.email_verified = email_verified
 
+    def __repr__(self):
+        return f"<User id={self.user_id} Cognito id={self.cognito_id} email={self.email} verified={self.email_verified}>"
+
     @classmethod
     def create(cls, cognito_id: str, email: str, email_verified: bool = False) -> "User":
         with database.cursor_scope() as cursor:
@@ -34,10 +37,8 @@ class User:
                     "(cognito_id, email, email_verified) "
                     "VALUES (%(cognito_id)s, %(email)s, %(email_verified)s); "
                 ),
-                (
                     {"cognito_id": cognito_id, "email": email, "email_verified": email_verified}
-                )
-                )
+            )
 
         instance = cls.from_email(email)
 
@@ -51,7 +52,7 @@ class User:
                     "select * from users "
                     "where email = %(email)s;"
                 ),
-                ({"email": email})
+                {"email": email}
             )
 
             answer = cursor.fetchone()
@@ -76,7 +77,7 @@ class User:
                     "SELECT * FROM users "
                     "WHERE user_id = %(user_id)s;"
                 ),
-                ({"user_id": user_id})
+                {"user_id": user_id}
             )
             answer = cursor.fetchone()
 
@@ -86,7 +87,7 @@ class User:
             instance = cls(
                 user_id=answer.user_id,
                 cognito_id=answer.cognito_id,
-                email=answer.user_id,
+                email=answer.email,
                 email_verified=answer.email_verified
             )
 
@@ -100,7 +101,7 @@ class User:
                     "select * from users "
                     "WHERE  cognito_id = %(cognito_id)s; "
                 ),
-                ({"cognito_id": cognito_id})
+                {"cognito_id": cognito_id}
             )
 
             answer = cursor.fetchone()
@@ -125,10 +126,10 @@ class User:
                     "DELETE FROM users "
                     "WHERE  user_id = %(user_id)s;"
                 ),
-                ({"user_id": user_id})
+                {"user_id": user_id}
             )
 
-    def verify_email(self, user_id: str):
+    def verify_email(self):
 
         with database.cursor_scope() as cursor:
             cursor.execute(
@@ -138,7 +139,7 @@ class User:
                     "WHERE user_id = %(user_id)s;"
                 ),
                 (
-                    {"user_id": user_id}
+                    {"user_id": self.user_id}
                 )
             )
 

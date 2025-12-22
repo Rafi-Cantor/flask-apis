@@ -79,7 +79,7 @@ def register():
         except user.CannotCreateNewUserError as e:
             return jsonify({'error_message': f"Cannot register user with {email}. Reason: {str(e.args)}"}), 500
 
-    return jsonify({'message': f"User with {email} has been created"}), 201
+    return jsonify({'message': f"User with {email} has been created. Please check your email for a confirmation code"}), 201
 
 
 @auth.route('/confirm_account', methods=["POST"])
@@ -104,7 +104,7 @@ def confirm_account():
         return jsonify({'error_message': f"Cannot confirm account with {email}. Reason: {str(e.args)}"}), 500
     else:
         try:
-            verify_user.verify_email(verify_user.user_id)
+            verify_user.verify_email()
         except user.CannotVerifyEmailError as e:
             return jsonify({'error_message': f"Cannot confirm account with {email}. Reason: {str(e.args)}"}), 500
 

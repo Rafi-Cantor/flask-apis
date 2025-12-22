@@ -16,11 +16,7 @@ def create_app():
 
     from app.auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix="/")
-
-    from app.movie_app import movie_app as movie_blueprint
-    app.register_blueprint(movie_blueprint, url_prefix="/movie_app")
-
-    from app.car_data_app import car_data_app as car_data_blueprint
-    app.register_blueprint(car_data_blueprint, url_prefix="/car_data_app")
+    from app.chat import chat as chat_blueprint
+    app.register_blueprint(chat_blueprint, url_prefix="/chat")
 
     return app

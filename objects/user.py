@@ -1,4 +1,5 @@
 from utils import database
+import uuid
 
 
 class CannotCreateNewUserError(Exception):
@@ -19,25 +20,32 @@ class CannotDeleteUserError(Exception):
 
 class User:
 
-    def __init__(self, user_id, cognito_id: str, email: str, email_verified: bool = False):
+    def __init__(self, user_id: uuid.UUID, cognito_id: str, email: str, avatar_url: str = None, email_verified: bool = False):
         self.user_id = user_id
         self.cognito_id = cognito_id
         self.email = email
+        self.avatar_url = avatar_url
         self.email_verified = email_verified
 
     def __repr__(self):
-        return f"<User id={self.user_id} Cognito id={self.cognito_id} email={self.email} verified={self.email_verified}>"
+        return f"<User id={self.user_id} Cognito id={self.cognito_id} email={self.email} " \
+               f"avatar url={self.avatar_url} verified={self.email_verified}>"
 
     @classmethod
-    def create(cls, cognito_id: str, email: str, email_verified: bool = False) -> "User":
+    def create(cls, cognito_id: str, email: str, avatar_url: str = None, email_verified: bool = False) -> "User":
         with database.cursor_scope() as cursor:
             cursor.execute(
                 (
                     "INSERT INTO users "
-                    "(cognito_id, email, email_verified) "
-                    "VALUES (%(cognito_id)s, %(email)s, %(email_verified)s); "
+                    "(cognito_id, email, avatar_url, email_verified) "
+                    "VALUES (%(cognito_id)s, %(email)s, %(avatar_url)s, %(email_verified)s); "
                 ),
-                    {"cognito_id": cognito_id, "email": email, "email_verified": email_verified}
+                    {
+                        "cognito_id": cognito_id,
+                        "email": email,
+                        "avatar_url": avatar_url,
+                        "email_verified": email_verified
+                    }
             )
 
         instance = cls.from_email(email)
@@ -64,6 +72,7 @@ class User:
                 user_id=answer.user_id,
                 cognito_id=answer.cognito_id,
                 email=answer.email,
+                avatar_url=answer.avatar_url,
                 email_verified=answer.email_verified
             )
 
@@ -88,6 +97,7 @@ class User:
                 user_id=answer.user_id,
                 cognito_id=answer.cognito_id,
                 email=answer.email,
+                avatar_url=answer.avatar_url,
                 email_verified=answer.email_verified
             )
 
@@ -113,13 +123,14 @@ class User:
                 user_id=answer.user_id,
                 cognito_id=answer.cognito_id,
                 email=answer.email,
+                avatar_url=answer.avatar_url,
                 email_verified=answer.email_verified
             )
 
         return instance
 
     @staticmethod
-    def delete(user_id: str):
+    def delete(user_id: uuid.UUID):
         with database.cursor_scope() as cursor:
             cursor.execute(
                 (

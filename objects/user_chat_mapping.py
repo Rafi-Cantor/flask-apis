@@ -1,6 +1,12 @@
 from utils import database
 import pendulum
 import uuid
+from chat import Chat
+from user import User
+
+
+class UserChatMappingDoesntExist(Exception):
+    pass
 
 
 class UserChatMapping:
@@ -42,43 +48,54 @@ class UserChatMapping:
         )
 
     @classmethod
-    def get_chats_for_user(cls, user_id: uuid.UUID) -> list["UserChatMapping"]:
+    def get_chats_for_user(cls, user_id: uuid.UUID) -> list["Chat"]:
         with database.cursor_scope() as cursor:
             cursor.execute(
-                "SELECT * "
-                "FROM user_chat_mappings "
-                "WHERE user_id = %(user_id)s;",
+                "SELECT c.chat_id, c.title, c.share_code, c.created_at, ucm.joined_at "
+                "FROM chats c "
+                "JOIN user_chat_mappings ucm ON c.chat_id = ucm.chat_id "
+                "WHERE ucm.user_id = %(user_id)s;",
                 {"user_id": user_id},
             )
 
             rows = cursor.fetchall()
 
+        if len(rows) == 0:
+            raise UserChatMappingDoesntExist(f"No user chat mapping exists for user {user_id}")
+
         return [
-            cls(
-                user_id=row.user_id,
+            Chat(
                 chat_id=row.chat_id,
-                joined_at=row.joined_at,
+                share_code=row.share_code,
+                title=row.title,
+                created_at=row.created_at,
             )
             for row in rows
         ]
 
     @classmethod
-    def get_users_for_chat(cls, chat_id: uuid.UUID) -> list["UserChatMapping"]:
+    def get_users_for_chat(cls, chat_id: uuid.UUID) -> list["User"]:
         with database.cursor_scope() as cursor:
             cursor.execute(
-                "SELECT * "
-                "FROM user_chat_mappings "
-                "WHERE chat_id = %(chat_id)s;",
+                "SELECT u.user_id, u.name, u.email "
+                "FROM users u "
+                "JOIN user_chat_mappings ucm ON u.user_id = ucm.user_id "
+                "WHERE ucm.chat_id = %(chat_id)s;",
                 {"chat_id": chat_id},
             )
 
             rows = cursor.fetchall()
 
+        if len(rows) == 0:
+            raise UserChatMappingDoesntExist(f"No user chat mapping exists for chat {chat_id}")
+
         return [
-            cls(
+            User(
                 user_id=row.user_id,
-                chat_id=row.chat_id,
-                joined_at=row.joined_at,
+                email=row.email,
+                cognito_id=row.cognito_id,
+                avatar_url=row.avatar_url,
+                email_verified=row.email_verified
             )
             for row in rows
         ]

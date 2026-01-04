@@ -10,7 +10,7 @@ class Message:
             message_id: uuid.UUID,
             chat_id: uuid.UUID,
             content: str,
-            sent_by: int,
+            sent_by: uuid.UUID,
             created_at: pendulum.DateTime
     ):
         self.message_id = message_id
@@ -24,18 +24,44 @@ class Message:
                f"sent by={self.sent_by} created at={self.created_at}>"
 
     @staticmethod
-    def create(chat_id: uuid.UUID, content: str, sent_by: int, created_at: pendulum.DateTime):
+    def create(chat_id: uuid.UUID, content: str, sent_by: uuid.UUID):
         with database.cursor_scope() as cursor:
             cursor.execute(
                 (
                     "INSERT INTO messages "
                     "(chat_id, content, sent_by, created_at) "
-                    "VALUES (%(chat_id)s, %(content)s, %(sent_by)s, %(created_at)s); "
+                    "VALUES (%(chat_id)s, %(content)s, %(sent_by)s; "
                 ),
-                    {
-                        "chat_id": chat_id,
-                        "content": content,
-                        "sent_by": sent_by,
-                        "created_at": created_at
-                    }
+                {
+                    "chat_id": chat_id,
+                    "content": content,
+                    "sent_by": sent_by,
+                }
             )
+
+
+class Messages:
+    @staticmethod
+    def get_messages_by_chat_id(chat_id: uuid.UUID, order: str = "ASC") -> list["Message"]:
+        with database.cursor_scope() as cursor:
+            cursor.execute(
+                "SELECT message_id, chat_id, content, sent_by, created_at "
+                "FROM messages "
+                "WHERE chat_id = %(chat_id)s "
+                "ORDER BY created_at %(order)s; ",
+                {
+                    "chat_id": chat_id,
+                    "order": order
+                }
+            )
+            rows = cursor.fetchall()
+            return [
+                Message(
+                    message_id=row["message_id"],
+                    chat_id=row["chat_id"],
+                    content=row["content"],
+                    sent_by=row["sent_by"],
+                    created_at=pendulum.parse(str(row["created_at"]))
+                )
+                for row in rows
+            ]

@@ -8,6 +8,7 @@ import settings
 from objects import user
 import jwt
 from jwt import PyJWTError, PyJWKClient
+from flask_socketio import disconnect
 
 token_auth = flask_httpauth.HTTPTokenAuth("token")
 basic_auth = flask_httpauth.HTTPBasicAuth()
@@ -202,6 +203,7 @@ def logout():
     cognito.cognito_client.global_sign_out(
         AccessToken=token
     )
+    disconnect()
     return jsonify({"logout_successful": True})
 
 

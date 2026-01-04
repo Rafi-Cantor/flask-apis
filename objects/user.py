@@ -20,7 +20,14 @@ class CannotDeleteUserError(Exception):
 
 class User:
 
-    def __init__(self, user_id: uuid.UUID, cognito_id: str, email: str, avatar_url: str = None, email_verified: bool = False):
+    def __init__(
+            self,
+            user_id: uuid.UUID,
+            cognito_id: str,
+            email: str,
+            avatar_url: str = None,
+            email_verified: bool = False
+    ):
         self.user_id = user_id
         self.cognito_id = cognito_id
         self.email = email
@@ -40,12 +47,12 @@ class User:
                     "(cognito_id, email, avatar_url, email_verified) "
                     "VALUES (%(cognito_id)s, %(email)s, %(avatar_url)s, %(email_verified)s); "
                 ),
-                    {
-                        "cognito_id": cognito_id,
-                        "email": email,
-                        "avatar_url": avatar_url,
-                        "email_verified": email_verified
-                    }
+                {
+                    "cognito_id": cognito_id,
+                    "email": email,
+                    "avatar_url": avatar_url,
+                    "email_verified": email_verified
+                }
             )
 
         instance = cls.from_email(email)
@@ -79,7 +86,7 @@ class User:
         return instance
 
     @classmethod
-    def from_user_id(cls, user_id: str) -> "User":
+    def from_user_id(cls, user_id: uuid.UUID) -> "User":
         with database.cursor_scope() as cursor:
             cursor.execute(
                 (
@@ -129,19 +136,17 @@ class User:
 
         return instance
 
-    @staticmethod
-    def delete(user_id: uuid.UUID):
+    def delete(self):
         with database.cursor_scope() as cursor:
             cursor.execute(
                 (
                     "DELETE FROM users "
                     "WHERE  user_id = %(user_id)s;"
                 ),
-                {"user_id": user_id}
+                {"user_id": self.user_id}
             )
 
     def verify_email(self):
-
         with database.cursor_scope() as cursor:
             cursor.execute(
                 (
@@ -156,3 +161,20 @@ class User:
 
         self.email_verified = True
 
+    def update_avatar(self, avatar_url: str):
+        with database.cursor_scope() as cursor:
+            cursor.execute(
+                (
+                    "UPDATE users "
+                    "SET avatar_url = %(avatar_url)s "
+                    "WHERE user_id = %(user_id)s;"
+                ),
+                (
+                    {
+                        "avatar_url": self.avatar_url,
+                        "user_id": self.user_id
+                    }
+                )
+            )
+
+        self.avatar_url = avatar_url

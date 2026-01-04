@@ -1,5 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO
+
+socketio = SocketIO()
 
 
 def create_app():
@@ -19,4 +22,5 @@ def create_app():
     from app.chat import chat as chat_blueprint
     app.register_blueprint(chat_blueprint, url_prefix="/chat")
 
+    socketio.init_app(app)
     return app

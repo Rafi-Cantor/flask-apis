@@ -29,8 +29,8 @@ class Message:
             cursor.execute(
                 (
                     "INSERT INTO messages "
-                    "(chat_id, content, sent_by, created_at) "
-                    "VALUES (%(chat_id)s, %(content)s, %(sent_by)s; "
+                    "(chat_id, content, sent_by) "
+                    "VALUES (%(chat_id)s, %(content)s, %(sent_by)s); "
                 ),
                 {
                     "chat_id": chat_id,

@@ -26,6 +26,23 @@ class UserChatMapping:
             f"chat_id={self.chat_id} joined_at={self.joined_at}>"
         )
 
+    @staticmethod
+    def check_exists(user_id: uuid.UUID, chat_id: uuid.UUID):
+        with database.cursor_scope() as cursor:
+            cursor.execute(
+                "SELECT user_id, chat_id,  joined_at"
+                "FROM user_chat_mappings "
+                "WHERE user_id=%(user_id)s and chat_id=%(chat_id)s;",
+                {
+                    "user_id": user_id,
+                    "chat_id": chat_id,
+                },
+            )
+            mapping = cursor.fetchone()
+
+        if not mapping:
+            raise UserChatMappingDoesntExist(f"No user chat mapping exists for user: {user_id} - chat: {user_id} ")
+
     @classmethod
     def create(cls, user_id: uuid.UUID, chat_id: uuid.UUID) -> "UserChatMapping":
         with database.cursor_scope() as cursor:

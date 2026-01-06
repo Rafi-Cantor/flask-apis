@@ -204,7 +204,7 @@ def logout():
         AccessToken=token
     )
     disconnect()
-    return jsonify({"logout_successful": True})
+    return jsonify({"message": "logged out!"}), 200
 
 
 @auth.route("/forgot_password_code", methods=["POST"])
@@ -220,7 +220,7 @@ def forgot_password_code():
         )
     except ClientError as e:
         return jsonify({'error_message': f"Cannot create a change password code. Reason: {str(e.args)}"}), 500
-    return jsonify({'message': f'Change password code has been sent to {email}'})
+    return jsonify({'message': f'Change password code has been sent to {email}'}), 201
 
 
 @auth.route("/forgot_password", methods=["POST"])

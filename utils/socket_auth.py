@@ -1,7 +1,7 @@
 from flask import session
 from flask_socketio import emit, disconnect
 from app.auth.views import verify_token
-
+from functools import wraps
 
 def authenticate_socket(token: str):
     user_obj = verify_token(token)
@@ -12,8 +12,6 @@ def authenticate_socket(token: str):
 
 
 def socket_auth_required(fn):
-    from functools import wraps
-
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if "user_id" not in session:

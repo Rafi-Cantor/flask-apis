@@ -129,5 +129,3 @@ class UserChatMapping:
                     "chat_id": chat_id,
                 },
             )
-
-
